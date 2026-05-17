@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心の経理ソフト — 勘定と感情</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0c12;
+    --surface: #13161f;
+    --surface2: #1c2030;
+    --surface3: #242840;
+    --border: #2a2f45;
+    --text: #e8e6e0;
+    --muted: #6b7090;
+    --faint: #3a3f58;
+    --gold: #d4a843;
+    --gold-dim: #1e180a;
+    --teal: #3dbfbf;
+    --teal-dim: #081a1a;
+    --blue: #5b8fd4;
+    --blue-dim: #0c1525;
+    --red: #e05555;
+    --red-dim: #1e0f0f;
+    --green: #4caf7d;
+    --green-dim: #0f2019;
+    --purple: #9b72d4;
+    --purple-dim: #130f1e;
+    --orange: #d4703a;
+    --orange-dim: #1e130a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ━━━ LAYOUT ━━━ */
+  .app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: 60px 1fr;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ━━━ HEADER ━━━ */
+  .header {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+  }
+
+  .header-logo {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 18px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--gold), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+
+  .header-date {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ━━━ SIDEBAR ━━━ */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* 仕訳入力フォーム */
+  .form-group { margin-bottom: 12px; }
+
+  .form-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    display: block;
+    font-weight: 300;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--gold);
+  }
+
+  .form-textarea { resize: none; height: 60px; }
+
+  .form-select option { background: var(--surface2); }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold), #b8860b);
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    color: #0a0c12;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 4px;
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+
+  /* 仕訳履歴 */
+  .journal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .journal-item {
+    background: var(--surface2);
+    border-radius: 4px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--border);
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .journal-item.revenue { border-left-color: var(--blue); }
+  .journal-item.cost { border-left-color: var(--red); }
+  .journal-item.special { border-left-color: var(--orange); }
+  .journal-item.asset { border-left-color: var(--teal); }
+  .journal-item.equity { border-left-color: var(--gold); }
+
+  .journal-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .journal-item-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    padding: 1px 6px;
+    border-radius: 8px;
+  }
+
+  .journal-item.revenue .journal-item-type { background: rgba(91,143,212,0.2); color: var(--blue); }
+  .journal-item.cost .journal-item-type { background: rgba(224,85,85,0.2); color: var(--red); }
+  .journal-item.special .journal-item-type { background: rgba(212,112,58,0.2); color: var(--orange); }
+  .journal-item.asset .journal-item-type { background: rgba(61,191,191,0.2); color: var(--teal); }
+  .journal-item.equity .journal-item-type { background: rgba(212,168,67,0.2); color: var(--gold); }
+
+  .journal-item-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    color: var(--faint);
+  }
+
+  .journal-item-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  .journal-item-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    margin-top: 4px;
+  }
+
+  .journal-item.revenue .journal-item-amount { color: var(--blue); }
+  .journal-item.cost .journal-item-amount { color: var(--red); }
+  .journal-item.special .journal-item-amount { color: var(--orange); }
+  .journal-item.asset .journal-item-amount { color: var(--teal); }
+  .journal-item.equity .journal-item-amount { color: var(--gold); }
+
+  /* ━━━ MAIN ━━━ */
+  .main {
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ━━━ TABS ━━━ */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 4px;
+    width: fit-content;
+  }
+
+  .tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+  }
+
+  .tab.active {
+    background: var(--surface2);
+    color: var(--gold);
+  }
+
+  /* ━━━ BS ━━━ */
+  .bs-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .bs-col { background: var(--surface); }
+
+  .bs-col-header {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-align: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bs-left .bs-col-header { background: var(--blue-dim); color: var(--blue); }
+  .bs-right .bs-col-header { background: var(--surface2); color: var(--muted); }
+
+  .bs-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: all 0.4s ease;
+  }
+
+  .bs-item:last-child { border-bottom: none; }
+
+  .bs-item-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .bs-item-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .bs-item-bar-wrap {
+    height: 6px;
+    background: var(--surface3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .bs-item-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .bs-item-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .bs-item-sub {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-top: 2px;
+  }
+
+  /* 資産 */
+  .bs-item.asset { background: var(--blue-dim); }
+  .bs-item.asset .bs-item-label { color: var(--blue); }
+  .bs-item.asset .bs-item-name { color: var(--blue); }
+  .bs-item.asset .bs-item-bar { background: var(--blue); }
+  .bs-item.asset .bs-item-amount { color: var(--blue); }
+
+  /* 負債 */
+  .bs-item.liability { background: var(--red-dim); }
+  .bs-item.liability .bs-item-label { color: var(--red); }
+  .bs-item.liability .bs-item-name { color: var(--red); }
+  .bs-item.liability .bs-item-bar { background: var(--red); }
+  .bs-item.liability .bs-item-amount { color: var(--red); }
+
+  /* 自己資本 */
+  .bs-item.equity { background: var(--gold-dim); }
+  .bs-item.equity .bs-item-label { color: var(--gold); }
+  .bs-item.equity .bs-item-name { color: var(--gold); }
+  .bs-item.equity .bs-item-bar { background: var(--gold); }
+  .bs-item.equity .bs-item-amount { color: var(--gold); }
+
+  /* 自己資本比率 */
+  .ratio-display {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .ratio-number {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    transition: all 0.6s ease;
+  }
+
+  .ratio-bar-wrap {
+    flex: 1;
+    height: 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .ratio-bar {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: linear-gradient(90deg, var(--red), var(--gold), var(--teal));
+  }
+
+  .ratio-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .ratio-comment {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 200px;
+  }
+
+  /* ━━━ PL ━━━ */
+  .pl-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .pl-header {
+    background: var(--surface2);
+    padding: 12px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pl-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 120px;
+    border-bottom: 1px solid var(--border);
+    transition: all 0.4s ease;
+  }
+
+  .pl-row:last-child { border-bottom: none; }
+
+  .pl-cell {
+    padding: 12px 16px;
+    border-right: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .pl-cell:last-child { border-right: none; }
+
+  .pl-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .pl-row.revenue { background: var(--blue-dim); }
+  .pl-row.revenue .pl-tag { background: rgba(91,143,212,0.2); color: var(--blue); }
+  .pl-row.revenue .pl-amount { color: var(--blue); font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; }
+
+  .pl-row.cost { background: var(--red-dim); }
+  .pl-row.cost .pl-tag { background: rgba(224,85,85,0.2); color: var(--red); }
+  .pl-row.cost .pl-amount { color: var(--red); font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; }
+
+  .pl-row.special { background: rgba(212,112,58,0.06); }
+  .pl-row.special .pl-tag { background: rgba(212,112,58,0.2); color: var(--orange); }
+  .pl-row.special .pl-amount { color: var(--orange); font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; }
+
+  .pl-row.profit { background: var(--gold-dim); }
+  .pl-row.profit .pl-tag { background: rgba(212,168,67,0.2); color: var(--gold); }
+  .pl-row.profit .pl-amount { color: var(--gold); font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 700; }
+
+  /* ━━━ INSIGHT ━━━ */
+  .insight-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .insight-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), var(--gold), var(--teal));
+  }
+
+  .insight-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .insight-text {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  /* ━━━ EMPTY STATE ━━━ */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--faint);
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 2;
+  }
+
+  .empty-state-icon { font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.4; }
+
+  /* ━━━ TOAST ━━━ */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    padding: 12px 18px;
+    font-size: 12px;
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ━━━ SECTION TITLE ━━━ */
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ━━━ PULSE ANIMATION ━━━ */
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(212,168,67,0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(212,168,67,0); }
+    100% { box-shadow: 0 0 0 0 rgba(212,168,67,0); }
+  }
+
+  .pulse { animation: pulse 0.6s ease; }
+
+  @media (max-width: 768px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 60px auto 1fr; }
+    .sidebar { max-height: 400px; }
+    .bs-container { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">心の経理ソフト</div>
+    <div class="header-sub">勘定と感情 / ポンコツ経理部長</div>
+    <div class="header-date" id="currentDate"></div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- 仕訳入力 -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">今日の仕訳を切る</div>
+
+      <div class="form-group">
+        <label class="form-label">出来事（何が起きた？）</label>
+        <input type="text" class="form-input" id="inputEvent" placeholder="例：上司に細かく言われた">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">感情</label>
+        <input type="text" class="form-input" id="inputEmotion" placeholder="例：むかつく、不安、安心">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">仕訳の種類</label>
+        <select class="form-select" id="inputType">
+          <option value="revenue">📈 理解収益（わかった・安心した）</option>
+          <option value="cost">📉 消耗費用（疲れた・我慢した）</option>
+          <option value="special">⚠️ 特別損失（反芻・ぐるぐる）</option>
+          <option value="asset">💎 安心資産（関係が改善した）</option>
+          <option value="equity">⭐ 自己資本増（客体化できた）</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">相手勘定（仮説）</label>
+        <input type="text" class="form-input" id="inputCounterpart" placeholder="例：チカラの欲求が満たされていない">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">金額（心のポイント）</label>
+        <input type="number" class="form-input" id="inputAmount" value="10" min="1" max="100">
+      </div>
+
+      <button class="btn-primary" onclick="addEntry()">仕訳を切る</button>
+      <button class="btn-secondary" onclick="resetAll()">リセット</button>
+    </div>
+
+    <!-- 仕訳履歴 -->
+    <div class="sidebar-section" style="flex:1">
+      <div class="sidebar-label">仕訳帳</div>
+      <div class="journal-list" id="journalList">
+        <div class="empty-state">
+          <span class="empty-state-icon">📒</span>
+          まだ仕訳がありません。<br>今日の伝票を<br>一枚だけ切ってみてください。
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TABS -->
+    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('bs')" id="tab-bs">BS</button>
+        <button class="tab" onclick="showTab('pl')" id="tab-pl">PL</button>
+      </div>
+      <div id="ratioDisplay" style="margin-left:auto;"></div>
+    </div>
+
+    <!-- BS VIEW -->
+    <div id="view-bs">
+      <div class="section-title">貸借対照表（BS）— 心の財務状態</div>
+
+      <!-- 自己資本比率 -->
+      <div class="ratio-display" style="margin-bottom:16px;">
+        <div>
+          <div class="ratio-number" id="ratioNumber" style="color: var(--gold);">0%</div>
+          <div class="ratio-label">心の自己資本比率</div>
+        </div>
+        <div style="flex:1;">
+          <div class="ratio-bar-wrap">
+            <div class="ratio-bar" id="ratioBar" style="width:0%"></div>
+          </div>
+          <div class="ratio-label" style="margin-top:6px;">低い ←→ 高い</div>
+        </div>
+        <div class="ratio-comment" id="ratioComment">
+          仕訳を切ると<br>自己資本比率が動きます
+        </div>
+      </div>
+
+      <div class="bs-container">
+        <div class="bs-col bs-left">
+          <div class="bs-col-header">借方 / 資産</div>
+          <div class="bs-item asset" id="bs-asset">
+            <div class="bs-item-label">ASSETS — 安心・理解・関係性</div>
+            <div class="bs-item-name">安心資産</div>
+            <div class="bs-item-bar-wrap">
+              <div class="bs-item-bar" id="bar-asset" style="width:0%"></div>
+            </div>
+            <div class="bs-item-amount" id="amt-asset">0 pt</div>
+            <div class="bs-item-sub">理解収益・安心から積み上がる</div>
+          </div>
+          <div class="bs-item" style="background:var(--teal-dim); padding:14px 16px;">
+            <div class="bs-item-label" style="color:var(--teal); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; margin-bottom:6px;">MEMO — 今日の捉え方</div>
+            <div class="bs-item-name" style="color:var(--teal); font-family:'Shippori Mincho',serif; font-size:14px; font-weight:700; margin-bottom:8px;">物事の捉え方</div>
+            <div style="font-size:11px; color:var(--muted); line-height:1.7; font-weight:300;" id="bs-memo">
+              仕訳を切ると、<br>捉え方の変化が記録されます。
+            </div>
+          </div>
+        </div>
+        <div class="bs-col bs-right">
+          <div class="bs-col-header">貸方 / 負債・資本</div>
+          <div class="bs-item liability" id="bs-liability">
+            <div class="bs-item-label">LIABILITIES — 外的コントロール</div>
+            <div class="bs-item-name">心の負債</div>
+            <div class="bs-item-bar-wrap">
+              <div class="bs-item-bar" id="bar-liability" style="width:0%"></div>
+            </div>
+            <div class="bs-item-amount" id="amt-liability">0 pt</div>
+            <div class="bs-item-sub">反芻・消耗・外的コントロール</div>
+          </div>
+          <div class="bs-item equity" id="bs-equity">
+            <div class="bs-item-label">EQUITY — 内的コントロール</div>
+            <div class="bs-item-name">自己資本</div>
+            <div class="bs-item-bar-wrap">
+              <div class="bs-item-bar" id="bar-equity" style="width:0%"></div>
+            </div>
+            <div class="bs-item-amount" id="amt-equity">0 pt</div>
+            <div class="bs-item-sub">客体化・理解・選択の積み重ね</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PL VIEW -->
+    <div id="view-pl" style="display:none;">
+      <div class="section-title">損益計算書（PL）— 今日の心の損益</div>
+      <div class="pl-container">
+        <div class="pl-header">心のPL — 仕訳が積み上がるとリアルタイムで動く</div>
+        <div class="pl-row revenue">
+          <div class="pl-cell"><span class="pl-tag">収益</span></div>
+          <div class="pl-cell">理解収益・安心・達成感・つながり</div>
+          <div class="pl-cell"><span class="pl-amount" id="pl-revenue">0 pt</span></div>
+        </div>
+        <div class="pl-row cost">
+          <div class="pl-cell"><span class="pl-tag">費用</span></div>
+          <div class="pl-cell">消耗・摩擦・我慢・外的コントロール</div>
+          <div class="pl-cell"><span class="pl-amount" id="pl-cost">0 pt</span></div>
+        </div>
+        <div class="pl-row special">
+          <div class="pl-cell"><span class="pl-tag">特損</span></div>
+          <div class="pl-cell">反芻・ぐるぐる・未仕訳の怒り</div>
+          <div class="pl-cell"><span class="pl-amount" id="pl-special">0 pt</span></div>
+        </div>
+        <div class="pl-row profit">
+          <div class="pl-cell"><span class="pl-tag">利益</span></div>
+          <div class="pl-cell">充実感・ストレスの低さ・余力</div>
+          <div class="pl-cell"><span class="pl-amount" id="pl-profit">0 pt</span></div>
+        </div>
+      </div>
+
+      <!-- PL コメント -->
+      <div class="insight-box" style="margin-top:16px;" id="plInsight">
+        <div class="insight-title">📊 今日の決算コメント</div>
+        <div class="insight-text" id="plComment">
+          仕訳を切ると、今日の決算コメントが出ます。<br>
+          今日の小さな伝票を一枚だけ切ってみてください。
+        </div>
+      </div>
+    </div>
+
+    <!-- INSIGHT BOX -->
+    <div class="insight-box" id="mainInsight">
+      <div class="insight-title">🔍 今日のひとこと</div>
+      <div class="insight-text" id="insightText">
+        「むかつく」で終わらせず、その相手勘定を見る。<br>
+        今日の伝票を一枚だけ切ることから始めてください。<br>
+        小さな理解収益が、自己資本になります。
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">仕訳完了</div>
+
+<script>
+  // ━━━ STATE ━━━
+  const state = {
+    asset: 0,
+    liability: 0,
+    equity: 0,
+    revenue: 0,
+    cost: 0,
+    special: 0,
+    entries: []
+  };
+
+  // ━━━ INIT ━━━
+  function init() {
+    const now = new Date();
+    document.getElementById('currentDate').textContent =
+      `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${['日','月','火','水','木','金','土'][now.getDay()]}曜日`;
+
+    // ローカルストレージから復元
+    const saved = localStorage.getItem('kokoro_keiryo');
+    if (saved) {
+      const data = JSON.parse(saved);
+      Object.assign(state, data);
+      renderAll();
+      renderJournal();
+    }
+  }
+
+  // ━━━ ADD ENTRY ━━━
+  function addEntry() {
+    const event = document.getElementById('inputEvent').value.trim();
+    const emotion = document.getElementById('inputEmotion').value.trim();
+    const type = document.getElementById('inputType').value;
+    const counterpart = document.getElementById('inputCounterpart').value.trim();
+    const amount = parseInt(document.getElementById('inputAmount').value) || 10;
+
+    if (!event) {
+      showToast('出来事を入力してください');
+      return;
+    }
+
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+    const entry = { event, emotion, type, counterpart, amount, time: timeStr };
+    state.entries.unshift(entry);
+
+    // BS/PL更新
+    switch(type) {
+      case 'revenue':
+        state.revenue += amount;
+        state.asset += amount;
+        state.equity += Math.floor(amount * 0.5);
+        break;
+      case 'cost':
+        state.cost += amount;
+        state.liability += amount;
+        break;
+      case 'special':
+        state.special += amount;
+        state.liability += Math.floor(amount * 1.5);
+        break;
+      case 'asset':
+        state.asset += amount;
+        state.revenue += Math.floor(amount * 0.3);
+        break;
+      case 'equity':
+        state.equity += amount;
+        state.asset += Math.floor(amount * 0.5);
+        state.revenue += Math.floor(amount * 0.3);
+        break;
+    }
+
+    // 保存
+    localStorage.setItem('kokoro_keiryo', JSON.stringify(state));
+
+    // レンダリング
+    renderAll();
+    renderJournal();
+    showToast('仕訳完了 ✓');
+
+    // フォームリセット
+    document.getElementById('inputEvent').value = '';
+    document.getElementById('inputEmotion').value = '';
+    document.getElementById('inputCounterpart').value = '';
+    document.getElementById('inputAmount').value = '10';
+  }
+
+  // ━━━ RENDER ALL ━━━
+  function renderAll() {
+    const total = Math.max(state.asset, 1);
+    const totalRL = Math.max(state.liability + state.equity, 1);
+    const maxVal = Math.max(state.asset, state.liability + state.equity, 1);
+
+    // BS
+    updateBar('bar-asset', state.asset / maxVal * 100);
+    updateBar('bar-liability', state.liability / maxVal * 100);
+    updateBar('bar-equity', state.equity / maxVal * 100);
+
+    document.getElementById('amt-asset').textContent = `${state.asset} pt`;
+    document.getElementById('amt-liability').textContent = `${state.liability} pt`;
+    document.getElementById('amt-equity').textContent = `${state.equity} pt`;
+
+    // 自己資本比率
+    const totalCapital = state.liability + state.equity;
+    const ratio = totalCapital > 0 ? Math.min(Math.round(state.equity / totalCapital * 100), 100) : 0;
+
+    const ratioEl = document.getElementById('ratioNumber');
+    ratioEl.textContent = `${ratio}%`;
+    ratioEl.style.color = ratio >= 60 ? 'var(--teal)' : ratio >= 30 ? 'var(--gold)' : 'var(--red)';
+    document.getElementById('ratioBar').style.width = `${ratio}%`;
+
+    // 比率コメント
+    const comments = {
+      high: ['外的コントロールに左右されにくい状態です', '苦手な人とも消耗せずに関われています', '自己資本が厚い、安定した状態です'],
+      mid: ['少しずつ自己資本が育っています', '理解収益を積み上げていきましょう', '今日の仕訳が明日の自分を助けます'],
+      low: ['今日は負債が多かったようです', '小さな理解収益から始めましょう', '費用発生までは反応。費用処理から選択。']
+    };
+    const pool = ratio >= 60 ? comments.high : ratio >= 30 ? comments.mid : comments.low;
+    document.getElementById('ratioComment').textContent = pool[Math.floor(Math.random() * pool.length)];
+
+    // PL
+    const profit = state.revenue - state.cost - state.special;
+    document.getElementById('pl-revenue').textContent = `${state.revenue} pt`;
+    document.getElementById('pl-cost').textContent = `${state.cost} pt`;
+    document.getElementById('pl-special').textContent = `${state.special} pt`;
+    document.getElementById('pl-profit').textContent = `${profit} pt`;
+
+    // PLコメント
+    let plComment = '';
+    if (state.entries.length === 0) {
+      plComment = '仕訳を切ると、今日の決算コメントが出ます。';
+    } else if (profit > 20) {
+      plComment = '今日は理解収益が多く出ています。安心資産が積み上がっています。この調子で小さな黒字を続けましょう。';
+    } else if (profit > 0) {
+      plComment = '今日は小さな黒字です。小さくても黒字は黒字。自己資本が少しずつ厚くなっています。';
+    } else if (state.special > state.cost) {
+      plComment = '反芻・ぐるぐる思考が多い状態です。未仕訳の伝票が残っているかもしれません。相手勘定を一つだけ探してみてください。';
+    } else {
+      plComment = '今日は費用が多い日でした。費用先行は成長の始まりかもしれません。この費用が理解収益につながるか、少しだけ考えてみてください。';
+    }
+    document.getElementById('plComment').textContent = plComment;
+
+    // BSメモ更新
+    if (state.entries.length > 0) {
+      const latest = state.entries[0];
+      const memos = {
+        revenue: `「${latest.event}」\n→ ${latest.counterpart || '相手勘定を見つけた'}\n理解収益が発生しました`,
+        cost: `「${latest.event}」\n→ ${latest.counterpart || '費用が発生'}\n先行費用か垂れ流しかを見てみましょう`,
+        special: `「${latest.event}」\n→ 未仕訳のまま残っています\n相手勘定を探すと楽になるかもしれません`,
+        asset: `「${latest.event}」\n→ 安心資産が増えました\nこの安心が次の人間関係コストを下げます`,
+        equity: `「${latest.event}」\n→ 客体化できました\n自己資本が育った瞬間です`
+      };
+      document.getElementById('bs-memo').textContent = memos[latest.type] || '';
+    }
+
+    // メインインサイト
+    const insights = [
+      '「むかつく」で終わらせず、その相手勘定を見る。それだけで、人間関係のコストが変わる。',
+      '費用発生までは反応。費用処理から選択。',
+      '苦手なままでいい。好きにならなくていい。消耗しなければいい。',
+      '支配は金利を取り、応援は配当を待つ。',
+      '小さな理解収益が、自己資本になる。今日の伝票を一枚だけ切ればいい。',
+      '一億総ポンコツ。誰でも飲み込まれる。大事なのは気づいて、仕訳して、選び直すこと。',
+      '今日のしんどさは、理解収益を生む前の先行費用かもしれない。',
+      '心の経営も、月次締めながら片手間でいい。'
+    ];
+    document.getElementById('insightText').textContent =
+      insights[state.entries.length % insights.length];
+
+    // パルスアニメーション
+    ['bs-asset','bs-liability','bs-equity'].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.remove('pulse');
+      setTimeout(() => el.classList.add('pulse'), 10);
+    });
+  }
+
+  function updateBar(id, pct) {
+    document.getElementById(id).style.width = `${Math.min(pct, 100)}%`;
+  }
+
+  // ━━━ RENDER JOURNAL ━━━
+  function renderJournal() {
+    const list = document.getElementById('journalList');
+    if (state.entries.length === 0) {
+      list.innerHTML = `<div class="empty-state"><span class="empty-state-icon">📒</span>まだ仕訳がありません。<br>今日の伝票を<br>一枚だけ切ってみてください。</div>`;
+      return;
+    }
+
+    const typeLabels = {
+      revenue: '理解収益',
+      cost: '消耗費用',
+      special: '特別損失',
+      asset: '安心資産',
+      equity: '自己資本増'
+    };
+
+    list.innerHTML = state.entries.slice(0, 20).map(e => `
+      <div class="journal-item ${e.type}">
+        <div class="journal-item-header">
+          <span class="journal-item-type">${typeLabels[e.type]}</span>
+          <span class="journal-item-time">${e.time}</span>
+        </div>
+        <div class="journal-item-text">${e.event}${e.emotion ? `（${e.emotion}）` : ''}${e.counterpart ? `<br>→ ${e.counterpart}` : ''}</div>
+        <div class="journal-item-amount">+${e.amount} pt</div>
+      </div>
+    `).join('');
+  }
+
+  // ━━━ TABS ━━━
+  function showTab(tab) {
+    document.getElementById('view-bs').style.display = tab === 'bs' ? 'block' : 'none';
+    document.getElementById('view-pl').style.display = tab === 'pl' ? 'block' : 'none';
+    document.getElementById('tab-bs').className = `tab ${tab === 'bs' ? 'active' : ''}`;
+    document.getElementById('tab-pl').className = `tab ${tab === 'pl' ? 'active' : ''}`;
+  }
+
+  // ━━━ TOAST ━━━
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // ━━━ RESET ━━━
+  function resetAll() {
+    if (!confirm('全ての仕訳をリセットしますか？')) return;
+    Object.assign(state, { asset:0, liability:0, equity:0, revenue:0, cost:0, special:0, entries:[] });
+    localStorage.removeItem('kokoro_keiryo');
+    renderAll();
+    renderJournal();
+    showToast('リセット完了');
+  }
+
+  // ━━━ ENTER KEY ━━━
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey) addEntry();
+  });
+
+  init();
+</script>
+</body>
+</html>
