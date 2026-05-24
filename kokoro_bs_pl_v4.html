@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心の財務諸表 v2 — 選択理論×成人発達理論×会計</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+
+  :root {
+    --bg: #FAF7F2;
+    --surface: #FFF8EF;
+    --surface2: #F5F0E8;
+    --border: #E8DCC8;
+    --text: #2C2416;
+    --muted: #8C7A60;
+    --red: #C0392B;
+    --red-dim: #FEF0EF;
+    --gold: #C9943A;
+    --gold-dim: #FDF6E8;
+    --blue: #3D7A6A;
+    --blue-dim: #EEF6F2;
+    --green: #2E7D52;
+    --green-dim: #EEF8F2;
+    --purple: #D4703A;
+    --purple-dim: #FEF4EE;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    padding: 48px 20px;
+  }
+
+  .page { max-width: 900px; margin: 0 auto; }
+
+  /* ヘッダー */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .header h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(28px, 6vw, 48px);
+    font-weight: 800;
+    line-height: 1.2;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--text) 50%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .header-sub {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 1px;
+  }
+
+  .version-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--gold);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* セクションラベル */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* BS */
+  .bs-section { margin-bottom: 48px; }
+
+  .bs-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .bs-col {
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bs-col-header {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-align: center;
+    padding: 12px;
+    text-transform: uppercase;
+  }
+
+  .bs-left .bs-col-header {
+    background: var(--blue-dim);
+    color: var(--blue);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bs-right .bs-col-header {
+    background: var(--surface2);
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bs-item {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    flex: 1;
+  }
+
+  .bs-item:last-child { border-bottom: none; }
+
+  .bs-item-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bs-item-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .bs-item-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .bs-item.asset { background: var(--blue-dim); }
+  .bs-item.asset .bs-item-title { color: var(--blue); }
+  .bs-item.asset .bs-item-tag { color: var(--blue); }
+
+  .bs-item.liability { background: var(--red-dim); }
+  .bs-item.liability .bs-item-title { color: var(--red); }
+  .bs-item.liability .bs-item-tag { color: var(--red); }
+
+  .bs-item.equity { background: var(--gold-dim); }
+  .bs-item.equity .bs-item-title { color: var(--gold); }
+  .bs-item.equity .bs-item-tag { color: var(--gold); }
+
+  /* 全行動ブロック */
+  .zenko-section { margin-bottom: 48px; }
+
+  .zenko-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    background: var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .zenko-item {
+    background: var(--surface);
+    padding: 18px;
+  }
+
+  .zenko-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .zenko-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .zenko-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .zenko-ctrl {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: auto;
+  }
+
+  .zenko-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+    font-weight: 300;
+    margin-bottom: 10px;
+  }
+
+  .zenko-example {
+    font-size: 11px;
+    font-style: italic;
+    color: var(--muted);
+    padding: 8px 10px;
+    border-left: 2px solid var(--border);
+    line-height: 1.7;
+  }
+
+  /* 行為 */
+  .zenko-item.koi { background: var(--blue-dim); }
+  .zenko-item.koi .zenko-dot { background: var(--blue); }
+  .zenko-item.koi .zenko-title { color: var(--blue); }
+  .zenko-item.koi .zenko-ctrl { background: rgba(91,143,212,0.15); color: var(--blue); }
+  .zenko-item.koi .zenko-example { border-color: var(--blue); }
+
+  /* 思考＝捉え方 */
+  .zenko-item.shiko { background: var(--purple-dim); }
+  .zenko-item.shiko .zenko-dot { background: var(--purple); }
+  .zenko-item.shiko .zenko-title { color: var(--purple); }
+  .zenko-item.shiko .zenko-ctrl { background: rgba(155,114,212,0.15); color: var(--purple); }
+  .zenko-item.shiko .zenko-example { border-color: var(--purple); }
+
+  /* 感情 */
+  .zenko-item.kanjyo { background: var(--red-dim); }
+  .zenko-item.kanjyo .zenko-dot { background: var(--red); }
+  .zenko-item.kanjyo .zenko-title { color: var(--red); }
+  .zenko-item.kanjyo .zenko-ctrl { background: rgba(224,85,85,0.15); color: var(--red); }
+  .zenko-item.kanjyo .zenko-example { border-color: var(--red); }
+
+  /* 生理反応 */
+  .zenko-item.seiri { background: var(--green-dim); }
+  .zenko-item.seiri .zenko-dot { background: var(--green); }
+  .zenko-item.seiri .zenko-title { color: var(--green); }
+  .zenko-item.seiri .zenko-ctrl { background: rgba(76,175,125,0.15); color: var(--green); }
+  .zenko-item.seiri .zenko-example { border-color: var(--green); }
+
+  /* 接続矢印 */
+  .connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 0;
+    gap: 16px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  .connector-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  /* PL */
+  .pl-section { margin-bottom: 48px; }
+
+  .pl-table {
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .pl-header {
+    background: var(--surface2);
+    padding: 12px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pl-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pl-row:last-child { border-bottom: none; }
+
+  .pl-row.pl-head {
+    background: var(--surface2);
+  }
+
+  .pl-cell {
+    padding: 13px 14px;
+    font-size: 12px;
+    border-right: 1px solid var(--border);
+    line-height: 1.6;
+  }
+
+  .pl-cell:last-child { border-right: none; }
+
+  .pl-row.pl-head .pl-cell {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    padding: 8px 14px;
+  }
+
+  .pl-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .pl-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  .pl-row.revenue { background: var(--blue-dim); }
+  .pl-row.revenue .pl-tag { background: rgba(91,143,212,0.2); color: var(--blue); }
+
+  .pl-row.cost { background: var(--red-dim); }
+  .pl-row.cost .pl-tag { background: rgba(224,85,85,0.2); color: var(--red); }
+
+  .pl-row.special { background: rgba(224,85,85,0.05); }
+  .pl-row.special .pl-tag { background: rgba(224,85,85,0.15); color: var(--red); }
+
+  .pl-row.profit { background: var(--gold-dim); }
+  .pl-row.profit .pl-tag { background: rgba(212,168,67,0.2); color: var(--gold); }
+  .pl-row.profit .pl-cell { font-weight: 700; }
+
+  /* 比較カード */
+  .compare-section { margin-bottom: 48px; }
+
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .compare-card {
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .compare-card-header {
+    padding: 14px 18px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 14px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compare-card.debt .compare-card-header {
+    background: var(--red-dim);
+    color: var(--red);
+  }
+
+  .compare-card.equity .compare-card-header {
+    background: var(--gold-dim);
+    color: var(--gold);
+  }
+
+  .compare-meter {
+    padding: 14px 18px 8px;
+  }
+
+  .meter-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .meter-bar {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .meter-fill-low {
+    height: 100%;
+    width: 22%;
+    background: linear-gradient(90deg, var(--red), #ff8080);
+    border-radius: 3px;
+  }
+
+  .meter-fill-high {
+    height: 100%;
+    width: 76%;
+    background: linear-gradient(90deg, var(--gold), #f0c060);
+    border-radius: 3px;
+  }
+
+  .compare-rows {
+    padding: 0 18px 16px;
+  }
+
+  .compare-row {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  .compare-row:last-child { border-bottom: none; }
+
+  .compare-row-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    display: flex;
+    align-items: flex-start;
+    padding-top: 2px;
+  }
+
+  .compare-row-val {
+    color: var(--text);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* インサイト */
+  .insight-section { margin-bottom: 48px; }
+
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .insight-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), var(--purple), var(--blue), var(--gold));
+  }
+
+  .insight-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .insight-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .insight-list li {
+    font-size: 12px;
+    line-height: 1.8;
+    padding-left: 18px;
+    position: relative;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .insight-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+  }
+
+  .insight-list li strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* フッター */
+  .footer {
+    text-align: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--muted);
+  }
+
+  /* アニメーション */
+  [data-anim] {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  [data-anim="1"] { animation-delay: 0s; }
+  [data-anim="2"] { animation-delay: 0.12s; }
+  [data-anim="3"] { animation-delay: 0.24s; }
+  [data-anim="4"] { animation-delay: 0.36s; }
+  [data-anim="5"] { animation-delay: 0.48s; }
+  [data-anim="6"] { animation-delay: 0.60s; }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 640px) {
+    .bs-container { grid-template-columns: 1fr; }
+    .zenko-grid { grid-template-columns: 1fr; }
+    .pl-row { grid-template-columns: 60px 1fr 1fr; }
+    .pl-row .pl-cell:nth-child(3) { display: none; }
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ヘッダー -->
+  <div class="header" data-anim="1">
+    <div class="header-eyebrow">久保田塾 / 選択理論 × 成人発達理論 × 会計思考</div>
+    <div class="version-badge">VERSION 2.0 — 全行動統合モデル</div>
+    <h1>心の財務諸表</h1>
+    <div class="header-sub">物事の捉え方が資産をつくり、PLに現れる</div>
+  </div>
+
+  <!-- BS -->
+  <div class="bs-section" data-anim="2">
+    <div class="section-label">貸借対照表（BS）— BALANCE SHEET</div>
+    <div class="bs-container">
+      <div class="bs-col bs-left">
+        <div class="bs-col-header" style="background:var(--blue-dim);color:var(--blue);border-bottom:1px solid var(--border);">借方 / 資産</div>
+        <div class="bs-item asset">
+          <div class="bs-item-tag">ASSETS — 物事の捉え方・思考・行動</div>
+          <div class="bs-item-title">認識＋全行動</div>
+          <div class="bs-item-desc">
+            資産の正体は「物事の捉え方」。<br>
+            そこから思考・行動・感情・生理反応が生まれる。<br>
+            <br>
+            負債が多いほど捉え方が反応的になり、<br>
+            自己資本が高いほど捉え方が選択的になる。
+          </div>
+        </div>
+        <div class="bs-item asset">
+          <div class="bs-item-tag">具体例</div>
+          <div class="bs-item-title">「欲求が満たされていない」と読む</div>
+          <div class="bs-item-desc">
+            上司の箸の上げ下げを<br>
+            「チカラの欲求が満たされていない」と捉えた。<br>
+            → 内的コントロール（自己資本）から生まれた認識<br>
+            → 会計を教えるという行動（資産の活用）へ
+          </div>
+        </div>
+      </div>
+      <div class="bs-col bs-right">
+        <div class="bs-col-header" style="background:var(--surface2);color:var(--muted);border-bottom:1px solid var(--border);">貸方 / 負債・資本</div>
+        <div class="bs-item liability">
+          <div class="bs-item-tag">LIABILITIES — 他人資本</div>
+          <div class="bs-item-title">外的コントロール</div>
+          <div class="bs-item-desc">
+            他者の評価・恐怖・強制が源泉。<br>
+            「怒られたくない」「認められたい（他者基準）」<br>
+            「嫌われたくない」「期待に応えなければ」<br>
+            <br>
+            ＝ キーガンの「主体に飲み込まれた状態」
+          </div>
+        </div>
+        <div class="bs-item equity">
+          <div class="bs-item-tag">EQUITY — 自己資本</div>
+          <div class="bs-item-title">内的コントロール</div>
+          <div class="bs-item-desc">
+            自分の5つの基本的欲求・価値観が源泉。<br>
+            「これが自分にとって大事だから」<br>
+            「自分の軸で選んでいる」<br>
+            <br>
+            ＝ キーガンの「客体化できている状態」
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" data-anim="3">
+    <div class="connector-line"></div>
+    <span>BSの源泉が「全行動」の質を決める</span>
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- 全行動 -->
+  <div class="zenko-section" data-anim="3">
+    <div class="section-label">全行動（Total Behavior）— 資産の中身</div>
+    <div class="zenko-grid">
+      <div class="zenko-item koi">
+        <div class="zenko-header">
+          <div class="zenko-dot"></div>
+          <div class="zenko-title">行為（Acting）</div>
+          <div class="zenko-ctrl">コントロール：高</div>
+        </div>
+        <div class="zenko-desc">
+          実際にとる行動・言動。<br>
+          最も意識的に選択できる要素。
+        </div>
+        <div class="zenko-example">
+          外的↓「口出しするな」と戦う<br>
+          内的↑「会計を一緒に勉強する」を選ぶ
+        </div>
+      </div>
+      <div class="zenko-item shiko">
+        <div class="zenko-header">
+          <div class="zenko-dot"></div>
+          <div class="zenko-title">思考＝捉え方（Thinking）</div>
+          <div class="zenko-ctrl">コントロール：中</div>
+        </div>
+        <div class="zenko-desc">
+          物事をどう意味づけるか。<br>
+          これが資産の核心。BSの影響を最も受ける。
+        </div>
+        <div class="zenko-example">
+          外的↓「あの人が悪い」（未仕訳状態）<br>
+          内的↑「欲求が満たされていない」（仕訳完了）
+        </div>
+      </div>
+      <div class="zenko-item kanjyo">
+        <div class="zenko-header">
+          <div class="zenko-dot"></div>
+          <div class="zenko-title">感情（Feeling）</div>
+          <div class="zenko-ctrl">直接制御：不可</div>
+        </div>
+        <div class="zenko-desc">
+          怒り・不安・喜び・充実感。<br>
+          直接コントロールできないが、<br>
+          思考と行為を変えると変化する。
+        </div>
+        <div class="zenko-example">
+          PLの収益・費用として現れる。<br>
+          仕訳できると「怒り」が「理解」に変わる。
+        </div>
+      </div>
+      <div class="zenko-item seiri">
+        <div class="zenko-header">
+          <div class="zenko-dot"></div>
+          <div class="zenko-title">生理反応（Physiology）</div>
+          <div class="zenko-ctrl">直接制御：不可</div>
+        </div>
+        <div class="zenko-desc">
+          身体の反応。動悸・疲労・緊張など。<br>
+          感情と連動して現れる。
+        </div>
+        <div class="zenko-example">
+          PLの特別損失として現れる。<br>
+          慢性的な消耗・燃え尽きの正体。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector" data-anim="4">
+    <div class="connector-line"></div>
+    <span>全行動の質がPLに積み上がる</span>
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- PL -->
+  <div class="pl-section" data-anim="4">
+    <div class="section-label">損益計算書（PL）— 毎日のストレスと充実の差</div>
+    <div class="pl-table">
+      <div class="pl-header">心のPL — 捉え方が変わると、PLが変わる</div>
+      <div class="pl-row pl-head">
+        <div class="pl-cell pl-label">勘定</div>
+        <div class="pl-cell">会計の意味</div>
+        <div class="pl-cell">選択理論・発達理論での意味</div>
+        <div class="pl-cell">全行動との対応</div>
+      </div>
+      <div class="pl-row revenue">
+        <div class="pl-cell pl-label"><span class="pl-tag">収益</span></div>
+        <div class="pl-cell">売上・利益の源泉</div>
+        <div class="pl-cell">欲求が満たされた体験・つながり・達成感</div>
+        <div class="pl-cell">内的コントロールの行為・思考から生まれる</div>
+      </div>
+      <div class="pl-row cost">
+        <div class="pl-cell pl-label"><span class="pl-tag">費用</span></div>
+        <div class="pl-cell">資源の消費</div>
+        <div class="pl-cell">外的コントロールによる消耗・摩擦・我慢</div>
+        <div class="pl-cell">反応的な行為・未仕訳の思考から生まれる</div>
+      </div>
+      <div class="pl-row special">
+        <div class="pl-cell pl-label"><span class="pl-tag">特損</span></div>
+        <div class="pl-cell">特別損失</div>
+        <div class="pl-cell">未仕訳のまま抱える怒り・被害者意識・反芻</div>
+        <div class="pl-cell">感情・生理反応が制御不能になった状態</div>
+      </div>
+      <div class="pl-row profit">
+        <div class="pl-cell pl-label"><span class="pl-tag">利益</span></div>
+        <div class="pl-cell">最終的な成果</div>
+        <div class="pl-cell">毎日の充実感・ストレスの低さ・関係の質</div>
+        <div class="pl-cell">自己資本比率が高いほど利益が積み上がる</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 比較 -->
+  <div class="compare-section" data-anim="5">
+    <div class="section-label">心の自己資本比率 — 二つのタイプ</div>
+    <div class="compare-grid">
+      <div class="compare-card debt">
+        <div class="compare-card-header">負債経営タイプ（外的コントロール優位）</div>
+        <div class="compare-meter">
+          <div class="meter-label">自己資本比率</div>
+          <div class="meter-bar"><div class="meter-fill-low"></div></div>
+        </div>
+        <div class="compare-rows">
+          <div class="compare-row">
+            <div class="compare-row-label">捉え方</div>
+            <div class="compare-row-val">「あの人むかつく」で止まる（未仕訳）</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-row-label">思考</div>
+            <div class="compare-row-val">戦う・逃げる・固まる</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-row-label">行為</div>
+            <div class="compare-row-val">反応的・他者依存・外的コントロールで戦う</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-row-label">PL</div>
+            <div class="compare-row-val">費用・特損が膨らむ。毎日が消耗</div>
+          </div>
+        </div>
+      </div>
+      <div class="compare-card equity">
+        <div class="compare-card-header">自己資本経営タイプ（内的コントロール優位）</div>
+        <div class="compare-meter">
+          <div class="meter-label">自己資本比率</div>
+          <div class="meter-bar"><div class="meter-fill-high"></div></div>
+        </div>
+        <div class="compare-rows">
+          <div class="compare-row">
+            <div class="compare-row-label">捉え方</div>
+            <div class="compare-row-val">「欲求が満たされていない」と仕訳できる</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-row-label">思考</div>
+            <div class="compare-row-val">構造を読む・選択肢を考える</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-row-label">行為</div>
+            <div class="compare-row-val">内発的・選択的。苦手なままでもうまくやれる</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-row-label">PL</div>
+            <div class="compare-row-val">収益が積み上がる。苦手な人とも消耗しない</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- インサイト -->
+  <div class="insight-section" data-anim="6">
+    <div class="insight-card">
+      <div class="insight-title">🔍 このフレームワークの核心</div>
+      <ul class="insight-list">
+        <li><strong>資産の正体は「物事の捉え方」。</strong>行動や感情はそこから生まれる。だからBSが変わればPLが変わる。</li>
+        <li><strong>「あの人むかつく」は未仕訳状態。</strong>仕訳できると、戦わずに相手の欲求を満たす選択が見えてくる。</li>
+        <li><strong>感情と生理反応は直接コントロールできない。</strong>でも思考（捉え方）と行為を変えると、感情はついてくる。</li>
+        <li><strong>苦手なままでいい。</strong>好きになることが目標ではなく、PLの費用を減らし、自己資本比率を上げることが目標。</li>
+        <li><strong>一億総ポンコツ。</strong>誰でも飲み込まれる。大事なのは気づいて、仕訳して、選び直すこと。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    ポンコツ経理部長 / 数字で考えて、心で動く &nbsp;|&nbsp; 久保田塾 &nbsp;|&nbsp; v2.0
+  </div>
+
+</div>
+</body>
+</html>
